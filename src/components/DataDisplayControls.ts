@@ -48,4 +48,18 @@ export class DataDisplayControls {
     await listItem.hover();
     await listItem.getByLabel(deleteControlLabel).click();
   }
+
+  /**
+   * WHAT: Clicks a control inside a specific non-semantic card matching text.
+   * WHY: Real-world grids (product cards, tiles) are often plain divs with no ARIA role,
+   *      and reveal their action controls only on hover.
+   * HOW: Filters cards by a CSS selector and text, hovers to reveal the control, then clicks it.
+   */
+  static async clickCardAction(page: Page, cardSelector: string, cardMatchText: string, actionSelector: string): Promise<void> {
+    Logger.info(`Clicking card action [${actionSelector}] for card matching: [${cardMatchText}]`);
+    const card = page.locator(cardSelector).filter({ hasText: cardMatchText });
+    await expect(card).toBeVisible({ timeout: 10000 });
+    await card.hover();
+    await card.locator(actionSelector).first().click();
+  }
 }

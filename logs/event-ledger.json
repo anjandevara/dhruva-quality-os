@@ -37,5 +37,44 @@
     "inputsHash": "3218c599adb6d464e9caaba15fb15377348ab3f8cfa3f6cd5ffa0c8fd967c60b",
     "outputsHash": "d566d371c0cb191970b876bc86c74e6307f0f1b06f9b93207e8e8f49f7caa968",
     "approvalStatus": "AUTO_ALLOWED"
+  },
+  {
+    "eventId": "EVT-1787652936515-58",
+    "previousEventHash": "3340dd4870a3c760ffa5fb5f0e57f029bd3c7eab61dee350cd2cc101f7ea6015",
+    "currentEventHash": "f84d4692338080abe60f6b198722010d95eab60246a515ba338d1e230d409d9f",
+    "timestamp": "2026-08-25T10:15:36.515Z",
+    "agentName": "SANJEEV",
+    "actionType": "SELF_HEALING_LOCATOR_RESOLUTION",
+    "targetProject": "Core Web Platform QA",
+    "environment": "qa",
+    "inputsHash": "8adcfa2eaf1a6394ca0b295062de482b3c1cc1035e0ad889e556ace0f2925822",
+    "outputsHash": "dee11c0cdf091c5d323e1a5e91c0eafe5a0aca23656a3b8da14bd7a8035eb639",
+    "approvalStatus": "PENDING_APPROVAL"
+  },
+  {
+    "eventId": "EVT-1787652936605-561",
+    "previousEventHash": "f84d4692338080abe60f6b198722010d95eab60246a515ba338d1e230d409d9f",
+    "currentEventHash": "e1d77f6e03742a4c65c8fc80b6ab31cfe706c090eeffdba43c1f25e14e028a10",
+    "timestamp": "2026-08-25T10:15:36.605Z",
+    "agentName": "LEKHA",
+    "actionType": "PROVENANCE_CHAIN_VERIFICATION_STEP_ONE",
+    "targetProject": "DHRUVA-Quality-OS",
+    "environment": "qa",
+    "inputsHash": "0dd069e010e1babefac469e45787cb1f619bc21b0a9fb74ffa9538860148f466",
+    "outputsHash": "d566d371c0cb191970b876bc86c74e6307f0f1b06f9b93207e8e8f49f7caa968",
+    "approvalStatus": "AUTO_ALLOWED"
+  },
+  {
+    "eventId": "EVT-1787652936606-197",
+    "previousEventHash": "e1d77f6e03742a4c65c8fc80b6ab31cfe706c090eeffdba43c1f25e14e028a10",
+    "currentEventHash": "6e088bf781ecf2cdc2e8188633827b3caa2ecd25eb3ff5328f1d36308883cf44",
+    "timestamp": "2026-08-25T10:15:36.606Z",
+    "agentName": "LEKHA",
+    "actionType": "PROVENANCE_CHAIN_VERIFICATION_STEP_TWO",
+    "targetProject": "DHRUVA-Quality-OS",
+    "environment": "qa",
+    "inputsHash": "3218c599adb6d464e9caaba15fb15377348ab3f8cfa3f6cd5ffa0c8fd967c60b",
+    "outputsHash": "d566d371c0cb191970b876bc86c74e6307f0f1b06f9b93207e8e8f49f7caa968",
+    "approvalStatus": "AUTO_ALLOWED"
   }
 ]

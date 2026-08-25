@@ -8,6 +8,7 @@ export interface ProjectRecord {
   activeEnvironment: string;
   s3BucketPrefix?: string;
   createdAt: string;
+  targetUrl?: string;
 }
 
 const seedProjects: ProjectRecord[] = [
@@ -26,6 +27,15 @@ const seedProjects: ProjectRecord[] = [
     activeEnvironment: 'staging',
     s3BucketPrefix: 'weekday-portal',
     createdAt: new Date(0).toISOString(),
+  },
+  {
+    id: 'PRJ-003',
+    projectName: 'E-Commerce Web Portal',
+    repositoryPath: process.cwd(),
+    activeEnvironment: 'qa',
+    s3BucketPrefix: 'ecommerce-store',
+    createdAt: new Date(0).toISOString(),
+    targetUrl: 'https://automationexercise.com',
   },
 ];
 
