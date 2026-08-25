@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Test Outputs & Artifacts
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+logs/*.log
+downloads/temp_*
+
+# Environment & Secrets (Never commit credentials)
+config/.env*
+!config/.env.example
+
+# Authentication Storage State
+src/fixtures/storageState/*.json
+!src/fixtures/storageState/.gitkeep
+
+# Database & Runtime
+*.db
+*.sqlite
+*.sqlite3
+/tmp/dhruva/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

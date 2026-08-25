@@ -1,0 +1,11 @@
+{
+  "validCustomer": {
+    "firstName": "Alex",
+    "lastName": "Mercer",
+    "emailAddress": "alex.mercer.qa@example.com",
+    "password": "SecurePassword123!",
+    "genderOption": "Male",
+    "countryName": "India",
+    "agreeToTerms": true
+  }
+}

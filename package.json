@@ -1,0 +1,44 @@
+{
+  "name": "dhruva-quality-os",
+  "version": "1.0.0",
+  "description": "DHRUVA: Autonomous Quality Engineering Command Platform & Playwright MAP Automation Framework",
+  "author": "Anjan Kumar Devara",
+  "license": "MIT",
+  "main": "src/cli/dhruva.ts",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:smoke": "npx playwright test --grep \"@smoke\"",
+    "test:regression": "npx playwright test --grep \"@regression\"",
+    "test:crud": "npx playwright test --grep \"@crud\"",
+    "test:chained": "npx playwright test --project=chained-suites",
+    "test:independent": "npx playwright test --project=independent-suites",
+    "test:read-only": "npx playwright test --grep \"@read-only\"",
+    "test:localhost": "cross-env ENV=localhost npx playwright test",
+    "test:dev": "cross-env ENV=dev npx playwright test",
+    "test:qa": "cross-env ENV=qa npx playwright test",
+    "test:prod": "cross-env ENV=prod npx playwright test",
+    "report:playwright": "npx playwright show-report",
+    "report:allure:generate": "allure generate allure-results --clean -o allure-report",
+    "report:allure:open": "allure open allure-report",
+    "dhruva:status": "npx ts-node src/cli/dhruva.ts status",
+    "dhruva:run": "npx ts-node src/cli/dhruva.ts run",
+    "dhruva:sync": "npx ts-node src/cli/dhruva.ts sync"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.9.1",
+    "@playwright/test": "^1.46.1",
+    "@types/node": "^20.14.9",
+    "allure-commandline": "^2.30.0",
+    "allure-js-commons": "^3.0.0",
+    "allure-playwright": "^3.0.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "winston": "^3.13.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.621.0"
+  }
+}
