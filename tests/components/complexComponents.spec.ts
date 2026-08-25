@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/testFixtures';
 import * as allure from 'allure-js-commons';
 import { MapExecutionEngine } from '../../src/engine/MapExecutionEngine';
 import { OverlayControls } from '../../src/components/OverlayControls';

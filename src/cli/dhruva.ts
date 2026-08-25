@@ -5,6 +5,7 @@ import { QaDocSync } from '../utils/qaDocSync';
 import { HealingDiffResolver, PatchDecision } from '../engine/HealingDiffResolver';
 import { HealedPatchRecord } from '../engine/HealingDiffStager';
 import { TraceabilityGenerator } from '../engine/TraceabilityGenerator';
+import { FlakyQuarantine } from '../engine/FlakyQuarantine';
 
 const [, , commandName, ...commandArgs] = process.argv;
 
@@ -34,6 +35,8 @@ function routeCommand(command: string, args: string[]): void {
     resolvePatchFromArgs(args[0], 'REJECT');
   } else if (command === 'sync-matrix') {
     syncTraceabilityMatrix();
+  } else if (command === 'list-quarantine') {
+    printQuarantinedTests();
   } else if (command === 'run') {
     console.log(`Initiating Playwright MAP Execution Engine...\n`);
   } else {
@@ -165,6 +168,21 @@ function resolvePatchFromArgs(patchId: string, decision: PatchDecision): void {
 function syncTraceabilityMatrix(): void {
   const rows = TraceabilityGenerator.generate();
   console.log(`documents/traceability-matrix.md regenerated with ${rows.length} scenario(s).\n`);
+}
+
+function printQuarantinedTests(): void {
+  const quarantined = FlakyQuarantine.listQuarantinedTests();
+  if (quarantined.length === 0) {
+    console.log('No tests currently quarantined.\n');
+    return;
+  }
+  console.log(`Quarantined Tests (${quarantined.length}):\n`);
+  quarantined.forEach(record => {
+    console.log(`  [${record.quarantineId}] ${record.testTitle}`);
+    console.log(`    Spec File : ${record.specFile}`);
+    console.log(`    Reason    : ${record.flakeReason}`);
+    console.log(`    Date      : ${record.quarantinedDate}\n`);
+  });
 }
 
 function runProjectSuite(projectId: string): void {

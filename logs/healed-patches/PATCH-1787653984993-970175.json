@@ -1,0 +1,9 @@
+{
+  "patchId": "PATCH-1787653984993-970175",
+  "targetFile": "/Users/anjandevaragmail.com/Documents/Gemini_Work/dhruva-quality-os/dhruva-quality-os-v1.0.0/tests/smoke/selfHealingVerification.spec.ts",
+  "staleLocator": "page.getByPlaceholder('Add a new task here')",
+  "healedLocator": "page.getByPlaceholder('What needs to be done?')",
+  "timestamp": "2026-08-25T10:33:04.993Z",
+  "commitSha": "local-uncommitted-dev",
+  "approvalStatus": "PENDING_APPROVAL"
+}

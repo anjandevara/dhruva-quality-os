@@ -27,6 +27,7 @@
     "dhruva:sync-docs": "npx ts-node src/cli/dhruva.ts sync-docs",
     "dhruva:patches": "npx ts-node src/cli/dhruva.ts patches",
     "dhruva:sync-matrix": "npx ts-node src/cli/dhruva.ts sync-matrix",
+    "dhruva:quarantine": "npx ts-node src/cli/dhruva.ts list-quarantine",
     "dhruva:hud": "npx ts-node src/cli/serveHud.ts"
   },
   "devDependencies": {
