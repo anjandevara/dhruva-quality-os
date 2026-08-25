@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Generated: 2026-08-25T10:36:09.607Z
+Generated: 2026-08-25T10:51:56.624Z
 
 | Story ID | Epic / Feature | Spec File | Scenario Title | Tags | Last Run Status | Linked Defects |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

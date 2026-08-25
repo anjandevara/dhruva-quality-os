@@ -13,6 +13,7 @@ export interface RunMetrics {
 
 const resultsFilePath = path.resolve(__dirname, '../../test-results/results.json');
 const eventLedgerFilePath = path.resolve(__dirname, '../../logs/event-ledger.json');
+const bugsFilePath = path.resolve(__dirname, '../../documents/bugs.md');
 
 const emptyMetrics: RunMetrics = {
   totalTests: 0, passedTests: 0, failedTests: 0, flakyTests: 0, skippedTests: 0,
@@ -59,6 +60,30 @@ export function readHealedEventCount(): number {
   try {
     const events: Array<{ actionType: string }> = JSON.parse(fs.readFileSync(eventLedgerFilePath, 'utf-8'));
     return events.filter(event => event.actionType === 'SELF_HEALING_LOCATOR_RESOLUTION').length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * WHAT: Counts bugs in documents/bugs.md whose Current Status is not "Verified Fixed".
+ * WHY: Surfaces outstanding defects as a first-class telemetry metric alongside test health.
+ * HOW: Parses the executive-summary table's Current Status column (bug tracking in this
+ *      codebase is not yet project-scoped, so this is a whole-suite total, not per-project).
+ */
+export function readOpenBugsCount(): number {
+  if (!fs.existsSync(bugsFilePath)) {
+    return 0;
+  }
+  try {
+    const rows = fs.readFileSync(bugsFilePath, 'utf-8')
+      .split('\n')
+      .filter(line => /^\|\s*BUG-\d+\s*\|/.test(line));
+    return rows.filter(row => {
+      const cells = row.split('|').map(cell => cell.trim());
+      const status = cells[cells.length - 3];
+      return status !== 'Verified Fixed';
+    }).length;
   } catch {
     return 0;
   }

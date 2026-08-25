@@ -1,10 +1,11 @@
 import * as http from 'http';
 import { spawn } from 'child_process';
 import { ProjectRegistry, ProjectRecord } from '../registry/ProjectRegistry';
-import { readLastRunMetrics, readHealedEventCount, RunMetrics } from '../utils/runMetrics';
+import { readLastRunMetrics, readHealedEventCount, readOpenBugsCount, RunMetrics } from '../utils/runMetrics';
 import { HealingDiffResolver, PatchDecision } from '../engine/HealingDiffResolver';
 import { HealedPatchRecord } from '../engine/HealingDiffStager';
 import { TraceabilityGenerator, TraceabilityRow } from '../engine/TraceabilityGenerator';
+import { FlakyQuarantine } from '../engine/FlakyQuarantine';
 
 const hudPort = 4173;
 const hudHost = '127.0.0.1';
@@ -17,6 +18,7 @@ server.listen(hudPort, hudHost, () => {
 function handleRequest(request: http.IncomingMessage, response: http.ServerResponse): void {
   const url = new URL(request.url || '/', `http://${hudHost}:${hudPort}`);
   const resolveMatch = url.pathname.match(/^\/api\/patches\/([^/]+)\/resolve$/);
+  const runProjectMatch = url.pathname.match(/^\/run-project\/([^/]+)$/);
 
   if (url.pathname === '/' && request.method === 'GET') {
     serveDashboard(response);
@@ -28,8 +30,12 @@ function handleRequest(request: http.IncomingMessage, response: http.ServerRespo
     serveJson(response, getPatchesPayload());
   } else if (url.pathname === '/api/traceability' && request.method === 'GET') {
     serveJson(response, { rows: TraceabilityGenerator.generate() });
+  } else if (url.pathname === '/api/quarantine' && request.method === 'GET') {
+    serveJson(response, { quarantined: FlakyQuarantine.listQuarantinedTests() });
   } else if (resolveMatch && request.method === 'POST') {
     handleResolvePatchRequest(request, response, resolveMatch[1]);
+  } else if (runProjectMatch && request.method === 'GET') {
+    runProjectSuite(response, runProjectMatch[1]);
   } else {
     response.writeHead(404, { 'Content-Type': 'text/plain' });
     response.end('Not Found');
@@ -87,6 +93,24 @@ function launchDetached(response: http.ServerResponse, command: string, args: st
   response.end(JSON.stringify({ launched: true, command: `${command} ${args.join(' ')}` }));
 }
 
+/**
+ * WHAT: Spawns the project's test suite detached, triggered from the HUD's "Run Suite" button.
+ * WHY: A real run takes longer than an HTTP request should block for; the HUD hands off and
+ *      the operator checks back via a page refresh or the Playwright report.
+ * HOW: Delegates to the existing `dhruva.ts run-project` CLI command as a detached child process.
+ */
+function runProjectSuite(response: http.ServerResponse, projectId: string): void {
+  if (!ProjectRegistry.getProject(projectId)) {
+    response.writeHead(404, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: `Unknown project id: ${projectId}` }));
+    return;
+  }
+  const child = spawn('npx', ['ts-node', 'src/cli/dhruva.ts', 'run-project', projectId], { detached: true, stdio: 'ignore' });
+  child.unref();
+  response.writeHead(200, { 'Content-Type': 'application/json' });
+  response.end(JSON.stringify({ launched: true, projectId }));
+}
+
 function launchAllureReport(response: http.ServerResponse): void {
   const generate = spawn('npx', ['allure', 'generate', 'allure-results', '--clean', '-o', 'allure-report'], { stdio: 'ignore' });
   generate.on('close', () => {
@@ -100,6 +124,7 @@ function launchAllureReport(response: http.ServerResponse): void {
 function renderDashboardHtml(): string {
   const metrics = readLastRunMetrics();
   const healedCount = readHealedEventCount();
+  const openBugsCount = readOpenBugsCount();
   const projects = ProjectRegistry.listProjects();
   const { pending, resolved } = getPatchesPayload();
   const traceabilityRows = TraceabilityGenerator.generate();
@@ -115,11 +140,8 @@ function renderDashboardHtml(): string {
     ${renderRadialMetric('Pass Rate', metrics.passRatePercent, 100, '%')}
     ${renderRadialMetric('Healed Actions', healedCount, Math.max(healedCount, 1), '')}
   </section>
-  <section class="projects">${projects.map(project => renderProjectCard(project, metrics)).join('')}</section>
-  <section class="launchers">
-    <button onclick="fetch('/launch/playwright-report')">Launch Playwright Trace Viewer</button>
-    <button onclick="fetch('/launch/allure-report')">Open Allure Report</button>
-  </section>
+  <h2 class="section-title">Registered Projects (${projects.length})</h2>
+  <section class="projects">${projects.map(project => renderProjectCard(project, metrics, openBugsCount)).join('')}</section>
   <h2 class="section-title">Pending Gated Approvals (${pending.length})</h2>
   <section class="patches">${renderPendingPatchesSection(pending, resolved)}</section>
   <h2 class="section-title">Traceability Matrix (${traceabilityRows.length} scenarios)</h2>
@@ -194,6 +216,15 @@ function renderResolveScript(): string {
         alert('Failed to resolve patch: ' + error.error);
       }
     }
+
+    async function runProjectSuite(projectId, buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.textContent = 'Running...';
+      await fetch('/run-project/' + projectId);
+      alert('Suite launched for ' + projectId + '. Refresh this page after it completes to see updated results.');
+      buttonEl.disabled = false;
+      buttonEl.textContent = 'Run Suite';
+    }
   </script>`;
 }
 
@@ -205,16 +236,32 @@ function renderRadialMetric(label: string, value: number, max: number, suffix: s
   </div>`;
 }
 
-function renderProjectCard(project: ProjectRecord, metrics: RunMetrics): string {
+/**
+ * WHAT: Renders one project's status card with health, open bugs, and action buttons.
+ * WHY: This is a single-suite framework instance, so Last Run Health and the trace/report
+ *      buttons reflect the one shared last run, not a truly isolated per-project run; Run Suite
+ *      is the one action that genuinely re-runs scoped to this project's environment.
+ * HOW: Formats project metadata plus shared run metrics into one card.
+ */
+function renderProjectCard(project: ProjectRecord, metrics: RunMetrics, openBugsCount: number): string {
   const statusLabel = metrics.totalTests === 0
     ? 'NO RUNS YET'
     : metrics.failedTests > 0 ? 'FAILING' : 'PASSING';
   const statusClass = statusLabel.toLowerCase().replace(/\s+/g, '-');
+  const targetUrl = project.targetUrl || 'Not configured';
 
   return `<div class="card">
     <div class="card-header"><span class="project-id">${project.id}</span><span class="badge ${statusClass}">${statusLabel}</span></div>
     <h2>${project.projectName}</h2>
+    <p>Target URL: <strong>${targetUrl}</strong></p>
     <p>Environment: <strong>${project.activeEnvironment}</strong></p>
+    <p>Last Run Health: <strong>${metrics.passedTests}/${metrics.totalTests} passed (${metrics.passRatePercent}%)</strong></p>
+    <p>Open Bugs: <strong>${openBugsCount}</strong></p>
+    <div class="project-actions">
+      <button onclick="runProjectSuite('${project.id}', this)">Run Suite</button>
+      <button onclick="fetch('/launch/playwright-report')">View Trace</button>
+      <button onclick="fetch('/launch/allure-report')">Allure Report</button>
+    </div>
   </div>`;
 }
 
@@ -237,7 +284,7 @@ function renderStyles(): string {
       display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 600;
     }
     .radial p { color: #7d8aa8; margin-top: 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+    .projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
     .card { background: #131a29; border: 1px solid #232c42; border-radius: 12px; padding: 1.25rem; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .project-id { color: #7d8aa8; font-size: 0.8rem; font-family: monospace; }
@@ -247,12 +294,14 @@ function renderStyles(): string {
     .badge.no-runs-yet { background: #232c42; color: #7d8aa8; }
     .card h2 { font-size: 1.05rem; margin: 0.25rem 0; }
     .card p { color: #b6c0d6; font-size: 0.9rem; margin: 0.25rem 0; }
-    .launchers { display: flex; gap: 1rem; }
+    .project-actions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+    .project-actions button { padding: 0.5rem 0.85rem; font-size: 0.8rem; }
     button {
       background: #1c2333; color: #e6ebf5; border: 1px solid #2c3550; border-radius: 8px;
       padding: 0.75rem 1.25rem; font-size: 0.9rem; cursor: pointer;
     }
     button:hover { background: #232c42; }
+    button:disabled { opacity: 0.6; cursor: default; }
     .empty-state { color: #7d8aa8; font-size: 0.9rem; }
     .patch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1rem; }
     .patch-card { background: #131a29; border: 1px solid #3b2f14; border-radius: 12px; padding: 1.25rem; }

@@ -30,7 +30,7 @@ const seedProjects: ProjectRecord[] = [
   },
   {
     id: 'PRJ-003',
-    projectName: 'E-Commerce Web Portal',
+    projectName: 'Automation Exercise Live Store',
     repositoryPath: process.cwd(),
     activeEnvironment: 'qa',
     s3BucketPrefix: 'ecommerce-store',
