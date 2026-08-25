@@ -14,6 +14,13 @@ export interface RunMetrics {
 const resultsFilePath = path.resolve(__dirname, '../../test-results/results.json');
 const eventLedgerFilePath = path.resolve(__dirname, '../../logs/event-ledger.json');
 const bugsFilePath = path.resolve(__dirname, '../../documents/bugs.md');
+const executionLogFilePath = path.resolve(__dirname, '../../logs/execution.log');
+
+const agentActionTypes: Record<string, string[]> = {
+  SANJEEV: ['SELF_HEALING_LOCATOR_RESOLUTION'],
+  RAKSHA: ['HEALED_PATCH_APPROVED', 'HEALED_PATCH_REJECTED'],
+  LEKHA: ['FLAKY_TEST_QUARANTINED'],
+};
 
 const emptyMetrics: RunMetrics = {
   totalTests: 0, passedTests: 0, failedTests: 0, flakyTests: 0, skippedTests: 0,
@@ -86,5 +93,46 @@ export function readOpenBugsCount(): number {
     }).length;
   } catch {
     return 0;
+  }
+}
+
+/**
+ * WHAT: Reports which agents have at least one real ledger event attributed to them.
+ * WHY: The HUD's agent indicators reflect genuine system activity, not a decorative roster -
+ *      DHRUVA is always the orchestrating core; KAVI has no instrumented ledger events yet in
+ *      this codebase, so it correctly reports idle rather than a fabricated glow.
+ * HOW: Filters the ledger by actionType per agent.
+ */
+export function readAgentActivity(): Record<string, boolean> {
+  const activity: Record<string, boolean> = { DHRUVA: true, KAVI: false, SANJEEV: false, RAKSHA: false, LEKHA: false };
+  if (!fs.existsSync(eventLedgerFilePath)) {
+    return activity;
+  }
+  try {
+    const events: Array<{ actionType: string }> = JSON.parse(fs.readFileSync(eventLedgerFilePath, 'utf-8'));
+    for (const [agent, actionTypes] of Object.entries(agentActionTypes)) {
+      activity[agent] = events.some(event => actionTypes.includes(event.actionType));
+    }
+  } catch {
+    // Leave default activity map on a corrupt/unreadable ledger.
+  }
+  return activity;
+}
+
+/**
+ * WHAT: Reads the last N lines of the real Winston execution log.
+ * WHY: Grounds the HUD's "Live Trace Arena" panel in genuine step-level output instead of a
+ *      fabricated live stream - this is what the framework actually logged during its last runs.
+ * HOW: Reads the plain-text log file (no ANSI colorizing - that's console-only) and slices the tail.
+ */
+export function readRecentExecutionLogLines(count: number): string[] {
+  if (!fs.existsSync(executionLogFilePath)) {
+    return [];
+  }
+  try {
+    const lines = fs.readFileSync(executionLogFilePath, 'utf-8').split('\n').filter(Boolean);
+    return lines.slice(-count);
+  } catch {
+    return [];
   }
 }

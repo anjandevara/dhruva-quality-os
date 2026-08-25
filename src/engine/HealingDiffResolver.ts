@@ -45,12 +45,22 @@ export class HealingDiffResolver {
   /**
    * WHAT: Replaces the stale locator snippet with the healed one in the target source file.
    * WHY: Approval is the only path from a staged proposal to a real source-code change.
-   * HOW: A single first-occurrence string replace; throws if the stale snippet is no longer present.
+   * HOW: A string replace, but only when the stale snippet appears exactly once - a first-match
+   *      replace would silently rewrite the wrong occurrence (e.g. a nearby comment or metadata
+   *      field containing the same text) rather than the real locator, so an ambiguous match
+   *      refuses to apply rather than guessing.
    */
   private static applyPatchToSource(patch: HealedPatchRecord): void {
     const sourceContent = fs.readFileSync(patch.targetFile, 'utf-8');
-    if (!sourceContent.includes(patch.staleLocator)) {
+    const occurrences = sourceContent.split(patch.staleLocator).length - 1;
+    if (occurrences === 0) {
       throw new Error(`HealingDiffResolver: stale locator not found in ${patch.targetFile}; patch [${patch.patchId}] cannot be applied`);
+    }
+    if (occurrences > 1) {
+      throw new Error(
+        `HealingDiffResolver: stale locator appears ${occurrences} times in ${patch.targetFile}; ` +
+        `patch [${patch.patchId}] is ambiguous and requires manual resolution`
+      );
     }
     const updatedContent = sourceContent.replace(patch.staleLocator, patch.healedLocator);
     fs.writeFileSync(patch.targetFile, updatedContent, 'utf-8');
