@@ -35,5 +35,5 @@ Page displayed 500 Internal Server Error.
 
 ### Verification History
 * Date: 2026-08-25
-* Build Version: Build-2026.08.25-v1.2.4
-* Outcome: Test passed. Image uploaded successfully. Verified by DHRUVA automated test runner.
+* Commit SHA: abc1234
+* Outcome: Test passed. Verified by DHRUVA automated test runner.

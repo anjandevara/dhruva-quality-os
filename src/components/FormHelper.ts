@@ -26,4 +26,15 @@ export class FormHelper {
     await expect(buttonLocator).toBeVisible({ timeout: 10000 });
     await buttonLocator.click();
   }
+
+  /**
+   * WHAT: Submits an input by pressing Enter, for forms with no submit button.
+   * WHY: Some components (search boxes, quick-add lists) commit via keyboard only.
+   * HOW: Resolves the same label-or-placeholder locator and presses Enter.
+   */
+  static async submitViaEnterKey(page: Page, labelOrPlaceholder: string): Promise<void> {
+    Logger.info(`Submitting via Enter key on input: [${labelOrPlaceholder}]`);
+    const inputLocator = page.getByLabel(labelOrPlaceholder).or(page.getByPlaceholder(labelOrPlaceholder));
+    await inputLocator.press('Enter');
+  }
 }

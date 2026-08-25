@@ -1,0 +1,41 @@
+[
+  {
+    "eventId": "EVT-1787650909473-143",
+    "previousEventHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "currentEventHash": "ccf0a0cc102279205eb03280973a5222c0a7965f6e83b75b16f9cf8f5d342423",
+    "timestamp": "2026-08-25T09:41:49.473Z",
+    "agentName": "SANJEEV",
+    "actionType": "SELF_HEALING_LOCATOR_RESOLUTION",
+    "targetProject": "Core Web Platform QA",
+    "environment": "qa",
+    "inputsHash": "8adcfa2eaf1a6394ca0b295062de482b3c1cc1035e0ad889e556ace0f2925822",
+    "outputsHash": "ab3db9308a9b435202477a8147cc1be8208fab0bdb17152b1d40160a4967dbeb",
+    "approvalStatus": "PENDING_APPROVAL"
+  },
+  {
+    "eventId": "EVT-1787650909536-413",
+    "previousEventHash": "ccf0a0cc102279205eb03280973a5222c0a7965f6e83b75b16f9cf8f5d342423",
+    "currentEventHash": "57caabd3c2fb161c7ad4a85aec41213b879b4be2869c1fcd01a3c15decdc09b2",
+    "timestamp": "2026-08-25T09:41:49.536Z",
+    "agentName": "LEKHA",
+    "actionType": "PROVENANCE_CHAIN_VERIFICATION_STEP_ONE",
+    "targetProject": "DHRUVA-Quality-OS",
+    "environment": "qa",
+    "inputsHash": "0dd069e010e1babefac469e45787cb1f619bc21b0a9fb74ffa9538860148f466",
+    "outputsHash": "d566d371c0cb191970b876bc86c74e6307f0f1b06f9b93207e8e8f49f7caa968",
+    "approvalStatus": "AUTO_ALLOWED"
+  },
+  {
+    "eventId": "EVT-1787650909536-373",
+    "previousEventHash": "57caabd3c2fb161c7ad4a85aec41213b879b4be2869c1fcd01a3c15decdc09b2",
+    "currentEventHash": "3340dd4870a3c760ffa5fb5f0e57f029bd3c7eab61dee350cd2cc101f7ea6015",
+    "timestamp": "2026-08-25T09:41:49.536Z",
+    "agentName": "LEKHA",
+    "actionType": "PROVENANCE_CHAIN_VERIFICATION_STEP_TWO",
+    "targetProject": "DHRUVA-Quality-OS",
+    "environment": "qa",
+    "inputsHash": "3218c599adb6d464e9caaba15fb15377348ab3f8cfa3f6cd5ffa0c8fd967c60b",
+    "outputsHash": "d566d371c0cb191970b876bc86c74e6307f0f1b06f9b93207e8e8f49f7caa968",
+    "approvalStatus": "AUTO_ALLOWED"
+  }
+]

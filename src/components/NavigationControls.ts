@@ -13,4 +13,16 @@ export class NavigationControls {
     await expect(tab).toBeVisible({ timeout: 10000 });
     await tab.click();
   }
+
+  /**
+   * WHAT: Clicks a standard hyperlink by its accessible name.
+   * WHY: Drives filter and menu links exposed as anchor elements.
+   * HOW: Resolves getByRole link with name matching.
+   */
+  static async clickNavigationLink(page: Page, linkName: string): Promise<void> {
+    Logger.info(`Clicking navigation link: [${linkName}]`);
+    const link = page.getByRole('link', { name: linkName });
+    await expect(link).toBeVisible({ timeout: 10000 });
+    await link.click();
+  }
 }

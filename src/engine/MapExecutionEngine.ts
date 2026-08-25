@@ -1,8 +1,11 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { Logger } from '../utils/logger';
+import { EventLedger } from './EventLedger';
+import { HealingDiffStager } from './HealingDiffStager';
 
 export interface SemanticLocatorCandidate {
   description: string;
+  locatorSnippet: string;
   getLocator: (page: Page) => Locator;
 }
 
@@ -44,6 +47,7 @@ ${formattedSteps}
   static async executeSelfHealingAction(
     page: Page,
     actionName: string,
+    targetFile: string,
     candidates: SemanticLocatorCandidate[],
     actionCallback: (locator: Locator) => Promise<void>
   ): Promise<void> {
@@ -66,6 +70,9 @@ ${formattedSteps}
           : `HEALED: Executed [${actionName}] via fallback candidate (${candidate.description}) on attempt ${attempt}`;
 
         this.logExecutionStep(actionName, statusMessage, 'PASS');
+        if (attempt > 1) {
+          this.recordHealingEvent(actionName, targetFile, candidates[0], candidate, attempt);
+        }
         return;
       } catch (error: any) {
         lastError = error;
@@ -80,6 +87,32 @@ ${formattedSteps}
     const failureMessage = `CIRCUIT_BREAKER_TRIPPED: [${actionName}] failed after ${attempt} attempts. Root error: ${lastError?.message}`;
     this.logExecutionStep(actionName, failureMessage, 'FAIL');
     throw new Error(failureMessage);
+  }
+
+  /**
+   * WHAT: Stages a gated healing patch and appends the event to the tamper-evident ledger.
+   * WHY: SANJEEV proposes the fix, RAKSHA gates it - a healed locator is never auto-committed
+   *      to source; it is a PENDING_APPROVAL artifact until a human reviews it.
+   * HOW: Delegates to HealingDiffStager for the patch file, then EventLedger for the audit trail.
+   */
+  private static recordHealingEvent(
+    actionName: string,
+    targetFile: string,
+    failedCandidate: SemanticLocatorCandidate,
+    healedCandidate: SemanticLocatorCandidate,
+    attempt: number
+  ): void {
+    const patch = HealingDiffStager.stagePatch(targetFile, failedCandidate.locatorSnippet, healedCandidate.locatorSnippet);
+
+    EventLedger.recordEvent(
+      'SANJEEV',
+      'SELF_HEALING_LOCATOR_RESOLUTION',
+      process.env.APPLICATION_NAME || 'DHRUVA-Quality-OS',
+      process.env.ENV || 'qa',
+      { actionName, targetFile, failedCandidateDescription: failedCandidate.description, healingAttempt: attempt },
+      { healedCandidateDescription: healedCandidate.description, resolutionStatus: 'HEALED', stagedPatchId: patch.patchId },
+      'PENDING_APPROVAL'
+    );
   }
 
   /**

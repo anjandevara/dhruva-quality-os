@@ -10,6 +10,9 @@ allure-report/
 logs/*.log
 downloads/temp_*
 
+# Registry reflection cache (source of truth is the seeded TypeScript, not this file)
+registry-cache.json
+
 # Environment & Secrets (Never commit credentials)
 config/.env*
 !config/.env.example

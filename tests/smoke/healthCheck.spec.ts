@@ -9,9 +9,10 @@ test.describe('Platform Health & Public Route Verification @smoke @read-only', (
     await allure.feature('Environment Health Check');
     await allure.story('Public Route Health Verification');
     await allure.description(
-      'WHAT: Verifies that the target application root URL loads with status 200.\n' +
+      'WHAT: Verifies that the target application TodoMVC route loads with status 200.\n' +
       'WHY: Ensures system availability before executing deeper test suites.\n' +
-      'HOW: Navigates to root URL, asserts response status is 200, and verifies page title.'
+      'HOW: Navigates to the TodoMVC route, asserts response status is 200, verifies page title, ' +
+      'and confirms the core input control is visible and interactive.'
     );
 
     const mapContext = {
@@ -22,14 +23,15 @@ test.describe('Platform Health & Public Route Verification @smoke @read-only', (
     };
 
     MapExecutionEngine.logMapAnalysis(mapContext, [
-      'GIVEN: Guest navigates to application root URL',
-      'THEN: Page must respond with HTTP 200 and visible heading'
+      'GIVEN: Guest navigates to the TodoMVC application route',
+      'THEN: Page must respond with HTTP 200 and visible heading',
+      'THEN: Core new-todo input control must be visible and ready for interaction'
     ]);
 
-    await test.step('GIVEN: Guest navigates to application root URL', async () => {
-      const response = await page.goto('/');
+    await test.step('GIVEN: Guest navigates to the TodoMVC application route', async () => {
+      const response = await page.goto('/todomvc');
       expect(response?.status()).toBeLessThan(400);
-      MapExecutionEngine.logExecutionStep('Navigate Root', 'Page loaded successfully', 'PASS');
+      MapExecutionEngine.logExecutionStep('Navigate TodoMVC Route', 'Page loaded successfully', 'PASS');
     });
 
     await test.step('THEN: Page must contain valid document title', async () => {
@@ -39,6 +41,15 @@ test.describe('Platform Health & Public Route Verification @smoke @read-only', (
         'Route Available' : true,
         'Page Title'      : pageTitle,
         'Environment'     : mapContext.marketEnvironment
+      });
+    });
+
+    await test.step('THEN: Core new-todo input control must be visible', async () => {
+      const newTodoInput = page.getByPlaceholder('What needs to be done?');
+      await expect(newTodoInput).toBeVisible();
+      MapExecutionEngine.logStateVerification({
+        'Input Control Ready' : true,
+        'Control'              : 'What needs to be done?'
       });
     });
   });

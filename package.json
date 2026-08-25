@@ -23,7 +23,11 @@
     "report:allure:open": "allure open allure-report",
     "dhruva:status": "npx ts-node src/cli/dhruva.ts status",
     "dhruva:run": "npx ts-node src/cli/dhruva.ts run",
-    "dhruva:sync": "npx ts-node src/cli/dhruva.ts sync"
+    "dhruva:sync": "npx ts-node src/cli/dhruva.ts sync",
+    "dhruva:sync-docs": "npx ts-node src/cli/dhruva.ts sync-docs",
+    "dhruva:patches": "npx ts-node src/cli/dhruva.ts patches",
+    "dhruva:sync-matrix": "npx ts-node src/cli/dhruva.ts sync-matrix",
+    "dhruva:hud": "npx ts-node src/cli/serveHud.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.9.1",
