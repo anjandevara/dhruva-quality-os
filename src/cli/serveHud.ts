@@ -79,13 +79,16 @@ function serveJson(response: http.ServerResponse, payload: unknown): void {
  * WHY: The "View Trace" modal embeds this same-origin, rather than spawning `playwright show-report`
  *      as a second process with an unpredictable port - this is the actual local report and trace
  *      data, just delivered through the HUD's own server instead of an external one.
- * HOW: Resolves the requested path under playwright-report/, guarding against path traversal.
+ * HOW: Resolves the requested path under playwright-report/, then verifies containment via
+ *      realpath + a path.relative boundary check - a plain resolvedPath.startsWith(reportDirectory)
+ *      is a classic prefix-bypass (a sibling directory like "playwright-report-evil" would also
+ *      pass that check), and symlinks inside the report directory could otherwise escape it too.
  */
 function serveReportAsset(response: http.ServerResponse, relativePath: string): void {
   const decodedPath = decodeURIComponent(relativePath || 'index.html');
   const resolvedPath = path.resolve(reportDirectory, decodedPath);
 
-  if (!resolvedPath.startsWith(reportDirectory) || !fs.existsSync(resolvedPath) || fs.statSync(resolvedPath).isDirectory()) {
+  if (!isContainedInReportDirectory(resolvedPath) || fs.statSync(resolvedPath).isDirectory()) {
     response.writeHead(404, { 'Content-Type': 'text/plain' });
     response.end('Report asset not found. Run npm test first to generate a report.');
     return;
@@ -94,6 +97,16 @@ function serveReportAsset(response: http.ServerResponse, relativePath: string): 
   const contentType = mimeTypesByExtension[path.extname(resolvedPath)] || 'application/octet-stream';
   response.writeHead(200, { 'Content-Type': contentType });
   fs.createReadStream(resolvedPath).pipe(response);
+}
+
+function isContainedInReportDirectory(candidatePath: string): boolean {
+  if (!fs.existsSync(reportDirectory) || !fs.existsSync(candidatePath)) {
+    return false;
+  }
+  const realBase = fs.realpathSync(reportDirectory);
+  const realCandidate = fs.realpathSync(candidatePath);
+  const relative = path.relative(realBase, realCandidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 function getPatchesPayload(): { pending: HealedPatchRecord[]; resolved: HealedPatchRecord[] } {
